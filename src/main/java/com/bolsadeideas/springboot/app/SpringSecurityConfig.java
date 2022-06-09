@@ -1,7 +1,5 @@
 package com.bolsadeideas.springboot.app;
 
-import javax.sql.DataSource;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -11,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.bolsadeideas.springboot.app.auth.handler.LoginSuccessHandler;
+import com.bolsadeideas.springboot.app.models.service.JpaUserDetailsService;
 
 @EnableGlobalMethodSecurity(securedEnabled = true)
 @Configuration
@@ -20,7 +19,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter{
     private LoginSuccessHandler successHandler;
 
     @Autowired
-    private DataSource dataSource;
+    private JpaUserDetailsService userdetailsService;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -49,20 +48,9 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter{
     @Autowired
     public void configurerGlobal(AuthenticationManagerBuilder builder)throws Exception{
 
-        builder.jdbcAuthentication().dataSource(dataSource).passwordEncoder(passwordEncoder)
-        .usersByUsernameQuery("SELECT username, password, enabled FROM users WHERE username=?")
-        .authoritiesByUsernameQuery("SELECT u.username, a.authority FROM authorities a INNER JOIN users u ON(a.user_id = u.id) WHERE u.username=?");
-
-        // PasswordEncoder encoder = passwordEncoder;
-        // UserBuilder users = User.builder().passwordEncoder(encoder::encode);
-
-        // try {
-        //     builder.inMemoryAuthentication()
-        //     .withUser(users.username("admin").password("12345").roles("ADMIN", "user"))
-        //     .withUser(users.username("sebas").password("1234").roles("USER"));
-        // } catch (Exception e) {
-        //     e.printStackTrace();
-        // }
+        builder.userDetailsService(userdetailsService)
+        .passwordEncoder(passwordEncoder);
+  
     }
     
 }
